@@ -6,3 +6,5 @@ from app.models.patient import Patient
 from app.models.shift import Shift
 from app.models.appointment import Appointment
 from app.models.surgery import Surgery
+from app.models.lab_test import LabTest
+from app.models.special_care_assignment import SpecialCareAssignment

@@ -15,15 +15,16 @@ from app.models.patient import Patient
 from app.models.shift import Shift
 from app.models.appointment import Appointment
 from app.models.surgery import Surgery
+from app.models.lab_test import LabTest
+from app.models.special_care_assignment import SpecialCareAssignment
 
-# Load .env database URL
+
 config = context.config
 config.set_main_option("sqlalchemy.url", os.getenv("DATABASE_URL"))
 
-# Set up logging
 fileConfig(config.config_file_name)
 
-target_metadata = SQLModel.metadata  # 🚀 Use SQLModel metadata
+target_metadata = SQLModel.metadata
 
 def run_migrations_offline():
     context.configure(

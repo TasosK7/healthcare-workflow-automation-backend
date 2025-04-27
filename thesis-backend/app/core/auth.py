@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from jose import jwt, JWTError
 from typing import Optional
 from app.models.user import User
+from app.models.staff import Staff
 from app.schemas.user import TokenData
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -58,4 +59,27 @@ def get_current_admin_or_hr(current_user: User = Depends(get_current_user)) -> U
             detail="Only admins and HR can access this"
         )
     return current_user
+
+def get_current_admin_or_lab_tech(
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+) -> User:
+    if current_user.role == "admin":
+        return current_user
+
+    if current_user.role == "staff":
+        statement = select(Staff).where(
+            Staff.user_id == current_user.id,
+            Staff.role == "lab_technician"
+        )
+        staff_member = session.exec(statement).first()
+
+        if staff_member:
+            return current_user
+
+    raise HTTPException(
+        status_code=403,
+        detail="Only admins and lab technicians can view lab tests"
+    )
+
 
