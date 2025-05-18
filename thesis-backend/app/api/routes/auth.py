@@ -6,6 +6,7 @@ from app.models.user import User
 from app.core.security import verify_password
 from app.core.auth import create_access_token, oauth2_scheme, get_current_user
 from app.schemas.user import Token, UserRead
+from datetime import timedelta
 
 router = APIRouter()
 
@@ -23,9 +24,20 @@ def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    access_token = create_access_token(data={"sub": user.username})
-    return {"access_token": access_token, "token_type": "bearer"}
+    access_token = create_access_token(
+        data={"sub": user.username},
+        expires_delta=timedelta(minutes=30)
 
+    )
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "role": user.role
+        }
+    }
 @router.get("/me", response_model=UserRead)
 def get_me(current_user: User = Depends(get_current_user)):
     return current_user
