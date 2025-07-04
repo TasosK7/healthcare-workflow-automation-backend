@@ -12,6 +12,16 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
+  backend:
+    build:
+      context: https://github.com/TasosK7/healthcare-workflow-automation-backend.git
+      dockerfile: Dockerfile
+    container_name: thesis-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://dbuser:healthcare@db:5432/hospital_db
+    depends_on:
+      - db    
 volumes:
   postgres_data:
