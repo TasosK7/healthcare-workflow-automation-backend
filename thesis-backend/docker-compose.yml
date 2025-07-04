@@ -14,7 +14,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
   backend:
     build:
-      context: https://github.com/TasosK7/healthcare-workflow-automation-backend.git
+      context: https://github.com/TasosK7/healthcare-workflow-automation-backend.git#main:thesis-backend
       dockerfile: Dockerfile
     container_name: thesis-backend
     ports:
