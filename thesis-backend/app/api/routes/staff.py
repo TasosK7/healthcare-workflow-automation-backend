@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends
 from sqlmodel import Session
 from typing import List
 
-from app.schemas.staff import StaffCreate, StaffRead
-from app.crud.staff import create_staff, get_staff
+from app.schemas.staff import StaffCreate, StaffRead, StaffUpdate
+from app.crud.staff import create_staff, get_staff , update_staff
 from app.db.session import get_session
 from app.core.auth import get_current_admin
 from app.models.user import User
@@ -24,3 +24,13 @@ def list_staff(
     current_admin: User = Depends(get_current_admin)
 ):
     return get_staff(session)
+
+@router.put("/{id}", response_model=StaffRead)
+def update(
+    id: int,
+    staff_in: StaffUpdate,
+    session: Session = Depends(get_session),
+    current_admin: User = Depends(get_current_admin)
+):
+    return update_staff(id, staff_in, session)
+

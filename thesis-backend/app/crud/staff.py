@@ -30,3 +30,19 @@ def create_staff(staff_in: StaffCreate, session: Session) -> Staff:
 
 def get_staff(session: Session) -> List[Staff]:
     return session.exec(select(Staff)).all()
+
+from app.schemas.staff import StaffUpdate
+
+def update_staff(id: int, staff_in: StaffUpdate, session: Session) -> Staff:
+    staff = session.get(Staff, id)
+    if not staff:
+        raise HTTPException(status_code=404, detail="Staff not found")
+
+    for key, value in staff_in.model_dump(exclude_unset=True).items():
+        setattr(staff, key, value)
+
+    session.add(staff)
+    session.commit()
+    session.refresh(staff)
+    return staff
+

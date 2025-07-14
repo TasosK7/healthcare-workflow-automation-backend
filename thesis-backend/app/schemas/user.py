@@ -18,9 +18,22 @@ class UserRead(UserBase):
     class Config:
         orm_mode = True
 
+class UserMinimal(BaseModel):
+    username: str
+    email: EmailStr
+    role: str
+
+    class Config:
+        orm_mode = True
+
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
 
 class TokenData(BaseModel):
     username: str
+
+class TokenWithUser(BaseModel):
+    access_token: str
+    token_type: str
+    user: UserMinimal

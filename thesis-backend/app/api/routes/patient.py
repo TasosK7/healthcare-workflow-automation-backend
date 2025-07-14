@@ -5,8 +5,8 @@ from typing import List
 from app.db.session import get_session
 from app.core.auth import get_current_admin
 from app.models.user import User
-from app.schemas.patient import PatientCreate, PatientRead
-from app.crud.patient import create_patient, get_patients
+from app.schemas.patient import PatientCreate, PatientRead, PatientUpdate
+from app.crud.patient import create_patient, get_patients, update_patient
 
 router = APIRouter()
 
@@ -24,3 +24,12 @@ def list_patients(
     current_admin: User = Depends(get_current_admin)
 ):
     return get_patients(session)
+
+@router.put("/{id}", response_model=PatientRead)
+def update(
+    id: int,
+    patient_in: PatientUpdate,
+    session: Session = Depends(get_session),
+    current_admin: User = Depends(get_current_admin)
+):
+    return update_patient(id, patient_in, session)

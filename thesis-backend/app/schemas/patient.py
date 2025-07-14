@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional
 
 class PatientBase(BaseModel):
     user_id: int
@@ -7,6 +8,11 @@ class PatientBase(BaseModel):
 
 class PatientCreate(PatientBase):
     pass
+
+class PatientUpdate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+
 
 class PatientRead(PatientBase):
     id: int

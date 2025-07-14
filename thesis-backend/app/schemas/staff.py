@@ -11,6 +11,12 @@ class StaffBase(BaseModel):
 class StaffCreate(StaffBase):
     pass
 
+class StaffUpdate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    department_id: Optional[int] = None
+    role: Optional[str] = None
+
 class StaffRead(StaffBase):
     id: int
 

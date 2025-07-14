@@ -5,12 +5,12 @@ from app.db.session import get_session
 from app.models.user import User
 from app.core.security import verify_password
 from app.core.auth import create_access_token, oauth2_scheme, get_current_user
-from app.schemas.user import Token, UserRead
+from app.schemas.user import Token, UserRead, TokenWithUser
 from datetime import timedelta
 
 router = APIRouter()
 
-@router.post("/login", response_model=Token)
+@router.post("/login", response_model=TokenWithUser)
 def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     session: Session = Depends(get_session)
@@ -32,11 +32,7 @@ def login(
     return {
         "access_token": access_token,
         "token_type": "bearer",
-        "user": {
-            "id": user.id,
-            "email": user.email,
-            "role": user.role
-        }
+        "user": user
     }
 @router.get("/me", response_model=UserRead)
 def get_me(current_user: User = Depends(get_current_user)):
