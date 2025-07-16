@@ -8,3 +8,5 @@ class Appointment(SQLModel, table=True):
     staff_id: int = Field(foreign_key="staff.id")
     date: date
     status: str
+    email_sent: bool = Field(default=False)
+    reminder_sent: bool = Field(default=False)

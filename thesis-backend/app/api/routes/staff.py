@@ -5,7 +5,7 @@ from typing import List
 from app.schemas.staff import StaffCreate, StaffRead, StaffUpdate
 from app.crud.staff import create_staff, get_staff , update_staff
 from app.db.session import get_session
-from app.core.auth import get_current_admin
+from app.core.auth import get_current_admin, get_current_user
 from app.models.user import User
 
 router = APIRouter()
@@ -21,7 +21,7 @@ def create(
 @router.get("/", response_model=List[StaffRead])
 def list_staff(
     session: Session = Depends(get_session),
-    current_admin: User = Depends(get_current_admin)
+    current_user: User = Depends(get_current_user)
 ):
     return get_staff(session)
 

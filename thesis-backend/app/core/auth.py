@@ -3,6 +3,7 @@ from jose import jwt, JWTError
 from typing import Optional
 from app.models.user import User
 from app.models.staff import Staff
+from app.models.patient import Patient
 from app.schemas.user import TokenData
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -51,6 +52,20 @@ def get_current_admin(current_user: User = Depends(get_current_user)) -> User:
             detail="Admins only"
         )
     return current_user
+
+def get_current_patient(
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+) -> Patient:
+    if current_user.role != "patient":
+        raise HTTPException(status_code=403, detail="Patients only")
+
+    patient = session.exec(select(Patient).where(Patient.user_id == current_user.id)).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient record not found")
+
+    return patient
+
 
 def get_current_admin_or_hr(current_user: User = Depends(get_current_user)) -> User:
     if current_user.role not in ("admin", "hr"):

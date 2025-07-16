@@ -3,8 +3,9 @@ from sqlmodel import Session
 from typing import List
 
 from app.db.session import get_session
-from app.core.auth import get_current_admin
+from app.core.auth import get_current_admin, get_current_patient
 from app.models.user import User
+from app.models.patient import Patient
 from app.schemas.patient import PatientCreate, PatientRead, PatientUpdate
 from app.crud.patient import create_patient, get_patients, update_patient
 
@@ -24,6 +25,10 @@ def list_patients(
     current_admin: User = Depends(get_current_admin)
 ):
     return get_patients(session)
+
+@router.get("/me", response_model=PatientRead)
+def read_current_patient(current_patient: Patient = Depends(get_current_patient)):
+    return current_patient
 
 @router.put("/{id}", response_model=PatientRead)
 def update(

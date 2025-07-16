@@ -15,3 +15,23 @@ class AppointmentRead(AppointmentBase):
 
     class Config:
         orm_mode = True
+
+class AppointmentWithStaffName(BaseModel):
+    id: int
+    staff_id: int
+    date: date
+    status: str
+    staff_name: str
+
+    class Config:
+        orm_mode = True
+
+class AppointmentForAirflow(AppointmentWithStaffName):
+    email_sent: bool
+    reminder_sent: bool
+
+    class Config:
+        orm_mode = True
+
+
+
