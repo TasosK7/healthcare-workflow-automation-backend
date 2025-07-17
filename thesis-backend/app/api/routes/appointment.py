@@ -4,6 +4,7 @@ from typing import List
 
 from app.db.session import get_session
 from app.core.auth import get_current_admin, get_current_user
+from app.services.airflow import trigger_appointment_dag
 from app.models.user import User
 from app.models.patient import Patient
 from app.models.appointment import Appointment
@@ -64,7 +65,6 @@ def get_my_appointments(
 def get_appointment_details(
     appointment_id: int,
     session: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user)  # or remove auth if only Airflow will use it
 ):
     appt = session.get(Appointment, appointment_id)
     if not appt:
@@ -104,6 +104,32 @@ def book_appointment(
     session.add(new_appt)
     session.commit()
     session.refresh(new_appt)
+
+    try:
+        trigger_appointment_dag(new_appt.id)
+    except Exception as e:
+        print(f"Warning: Failed to trigger Airflow DAG: {e}")
+
     return new_appt
+
+@router.post("/{appointment_id}/mark-email")
+def mark_email_sent(appointment_id: int, session: Session = Depends(get_session)):
+    appt = session.get(Appointment, appointment_id)
+    if not appt:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    appt.email_sent = True
+    session.add(appt)
+    session.commit()
+    return {"status": "ok"}
+
+@router.post("/{appointment_id}/mark-reminder")
+def mark_reminder_sent(appointment_id: int, session: Session = Depends(get_session)):
+    appt = session.get(Appointment, appointment_id)
+    if not appt:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    appt.reminder_sent = True
+    session.add(appt)
+    session.commit()
+    return {"status": "ok"}
 
 
