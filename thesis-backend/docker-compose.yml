@@ -1,6 +1,18 @@
 version: "3.9"
 
 services:
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
   db:
     image: postgres:14
     restart: always
@@ -21,7 +33,21 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql://dbuser:healthcare@db:5432/hospital_db
+      - MINIO_ENDPOINT=localhost:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET=lab-tests
     depends_on:
-      - db    
+      - db
+  frontend:
+    build:
+      context: https://github.com/TasosK7/healthcare-workflow-automation-react.git#main
+      dockerfile: Dockerfile
+    container_name: thesis-frontend
+    ports: 
+      - "5173:5173"
+    depends_on:
+      - backend
 volumes:
   postgres_data:
+  minio-data:
