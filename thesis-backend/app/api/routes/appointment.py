@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends , HTTPException
+from fastapi import APIRouter, Depends , HTTPException, Path
 from sqlmodel import Session, select
 from typing import List
 
@@ -9,7 +9,7 @@ from app.models.user import User
 from app.models.patient import Patient
 from app.models.appointment import Appointment
 from app.models.staff import Staff
-from app.schemas.appointment import AppointmentCreate, AppointmentRead, AppointmentWithStaffName, AppointmentForAirflow
+from app.schemas.appointment import AppointmentCreate, AppointmentRead, AppointmentWithStaffName, AppointmentForAirflow, AppointmentWithPatientName
 from app.crud.appointment import create_appointment, get_appointments
 
 router = APIRouter()
@@ -131,5 +131,63 @@ def mark_reminder_sent(appointment_id: int, session: Session = Depends(get_sessi
     session.add(appt)
     session.commit()
     return {"status": "ok"}
+
+@router.patch("/{appointment_id}/approve", response_model=AppointmentRead)
+def approve_appointment(
+    appointment_id: int = Path(..., description="Appointment ID to approve"),
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role != "staff":
+        raise HTTPException(status_code=403, detail="Staff only")
+
+    staff = session.exec(select(Staff).where(Staff.user_id == current_user.id)).first()
+    if not staff:
+        raise HTTPException(status_code=404, detail="Staff not found")
+
+    appointment = session.get(Appointment, appointment_id)
+    if not appointment:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+
+    if appointment.staff_id != staff.id:
+        raise HTTPException(status_code=403, detail="This appointment is not assigned to you")
+
+    if appointment.status == "confirmed":
+        raise HTTPException(status_code=400, detail="Appointment is already confirmed")
+
+    appointment.status = "confirmed"
+    session.add(appointment)
+    session.commit()
+    session.refresh(appointment)
+    return appointment
+
+@router.get("/staff/me", response_model=List[AppointmentWithPatientName])
+def get_staff_appointments_with_names(
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role != "staff":
+        raise HTTPException(status_code=403, detail="Staff only")
+
+    staff = session.exec(select(Staff).where(Staff.user_id == current_user.id)).first()
+    if not staff:
+        raise HTTPException(status_code=404, detail="Staff not found")
+
+    appointments = session.exec(
+        select(Appointment).where(Appointment.staff_id == staff.id)
+    ).all()
+
+    enriched_appointments = []
+    for appt in appointments:
+        patient = session.get(Patient, appt.patient_id)
+        enriched_appointments.append(AppointmentWithPatientName(
+            id=appt.id,
+            date=appt.date,
+            status=appt.status,
+            patient_id=appt.patient_id,
+            patient_name=f"{patient.first_name} {patient.last_name}"
+        ))
+
+    return enriched_appointments
 
 

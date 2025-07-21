@@ -8,3 +8,4 @@ class LabTest(SQLModel, table=True):
     lab_id: Optional[int] = Field(default= None ,foreign_key="department.id")
     result_file_url: Optional[str] = None
     status: str
+    diagnosis: Optional[str] = None

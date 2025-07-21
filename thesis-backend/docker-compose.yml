@@ -3,6 +3,7 @@ version: "3.9"
 services:
   minio:
     image: minio/minio:latest
+    restart: always
     container_name: thesis-minio
     ports:
       - "9000:9000"
@@ -37,7 +38,6 @@ services:
       - MINIO_ACCESS_KEY=minioadmin
       - MINIO_SECRET_KEY=minioadmin
       - MINIO_BUCKET=lab-tests
-      - AIRFLOW_EMAIL_DAG_TRIGGER_URL=http://host.docker.internal:8080/api/v1/dags/appointment_email_flow/dagRuns
     depends_on:
       - db
   frontend:

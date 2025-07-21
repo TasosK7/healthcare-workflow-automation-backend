@@ -26,6 +26,17 @@ class AppointmentWithStaffName(BaseModel):
     class Config:
         orm_mode = True
 
+class AppointmentWithPatientName(BaseModel):
+    id: int
+    date: date
+    status: str
+    patient_id: int
+    patient_name: str
+
+    class Config:
+        orm_mode = True
+
+
 class AppointmentForAirflow(AppointmentWithStaffName):
     email_sent: bool
     reminder_sent: bool
