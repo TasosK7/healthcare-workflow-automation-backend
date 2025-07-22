@@ -4,7 +4,7 @@ from typing import List
 
 from app.db.session import get_session
 from app.core.auth import get_current_admin, get_current_user
-from app.services.airflow import trigger_appointment_dag
+from app.services.airflow import trigger_appointment_dag, trigger_appointment_approval_dag
 from app.models.user import User
 from app.models.patient import Patient
 from app.models.appointment import Appointment
@@ -94,6 +94,18 @@ def book_appointment(
     if not patient:
         raise HTTPException(status_code=404, detail="Patient record not found")
 
+    existing_appt = session.exec(
+        select(Appointment)
+        .where(Appointment.staff_id == appt_in.staff_id)
+        .where(Appointment.date == appt_in.date)
+    ).first()
+
+    if existing_appt:
+        raise HTTPException(
+            status_code=400,
+            detail="The selected staff member already has an appointment on this date"
+        )
+
     new_appt = Appointment(
         patient_id=patient.id,
         staff_id=appt_in.staff_id,
@@ -159,6 +171,12 @@ def approve_appointment(
     session.add(appointment)
     session.commit()
     session.refresh(appointment)
+
+    try:
+        trigger_appointment_approval_dag(appointment.id)
+    except Exception as e:
+        print(f"Warning: Failed to trigger approval email DAG: {e}")
+
     return appointment
 
 @router.get("/staff/me", response_model=List[AppointmentWithPatientName])
@@ -189,5 +207,20 @@ def get_staff_appointments_with_names(
         ))
 
     return enriched_appointments
+
+@router.delete("/{appointment_id}", status_code=204)
+def delete_appointment(
+    appointment_id: int,
+    session: Session = Depends(get_session),
+    current_admin: User = Depends(get_current_admin)
+):
+    appt = session.get(Appointment, appointment_id)
+    if not appt:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+
+    session.delete(appt)
+    session.commit()
+    return
+
 
 

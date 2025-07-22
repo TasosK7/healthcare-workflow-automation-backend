@@ -19,7 +19,7 @@ def create_patient(patient_in: PatientCreate, session: Session) -> Patient:
             detail="User does not have the 'patient' role"
         )
 
-    patient = Patient(**patient_in.model_dump())
+    patient = Patient(**patient_in.model_dump(), email=user.email)
     session.add(patient)
     session.commit()
     session.refresh(patient)

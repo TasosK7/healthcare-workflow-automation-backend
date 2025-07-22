@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import Optional
 
 class PatientBase(BaseModel):
@@ -16,6 +16,7 @@ class PatientUpdate(BaseModel):
 
 class PatientRead(PatientBase):
     id: int
+    email: EmailStr
 
     class Config:
         orm_mode = True

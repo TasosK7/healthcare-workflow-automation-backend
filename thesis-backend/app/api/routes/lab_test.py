@@ -201,17 +201,42 @@ def get_diagnosed_lab_tests_for_patient(
 
     return enriched
 
-@router.get("/{lab_test_id}", response_model=LabTestRead)
-def get_lab_test_by_id(
+@router.get("/{lab_test_id}", response_model=LabTestWithPatientName)
+def get_lab_test_by_id_with_patient(
     lab_test_id: int,
-    session: Session = Depends(get_session),
-    # current_user: User = Depends(get_current_user)
+    session: Session = Depends(get_session)
 ):
     test = session.get(LabTest, lab_test_id)
     if not test:
         raise HTTPException(status_code=404, detail="Lab test not found")
 
-    return test
+    patient = session.get(Patient, test.patient_id)
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+
+    return LabTestWithPatientName(
+        id=test.id,
+        patient_id=test.patient_id,
+        result_file_url=test.result_file_url,
+        status=test.status,
+        diagnosis=test.diagnosis,
+        patient_name=f"{patient.first_name} {patient.last_name}"
+    )
+
+@router.delete("/{lab_test_id}", status_code=204)
+def delete_lab_test(
+    lab_test_id: int,
+    session: Session = Depends(get_session),
+    current_admin: User = Depends(get_current_admin)
+):
+    test = session.get(LabTest, lab_test_id)
+    if not test:
+        raise HTTPException(status_code=404, detail="Lab test not found")
+
+    session.delete(test)
+    session.commit()
+    return
+
 
 
 

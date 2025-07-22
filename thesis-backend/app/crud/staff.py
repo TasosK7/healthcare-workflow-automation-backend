@@ -22,7 +22,7 @@ def create_staff(staff_in: StaffCreate, session: Session) -> Staff:
             detail="User does not have a staff-compatible role"
         )
 
-    staff = Staff(**staff_in.model_dump())
+    staff = Staff(**staff_in.model_dump(), email=user.email)
     session.add(staff)
     session.commit()
     session.refresh(staff)

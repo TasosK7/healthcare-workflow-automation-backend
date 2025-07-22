@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import Optional
 
 class StaffBase(BaseModel):
@@ -19,6 +19,7 @@ class StaffUpdate(BaseModel):
 
 class StaffRead(StaffBase):
     id: int
+    email: EmailStr
 
     class Config:
         orm_mode = True
