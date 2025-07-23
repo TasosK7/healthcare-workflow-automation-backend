@@ -5,7 +5,7 @@ from typing import List
 from app.schemas.staff import StaffCreate, StaffRead, StaffUpdate
 from app.crud.staff import create_staff, get_staff , update_staff
 from app.db.session import get_session
-from app.core.auth import get_current_admin, get_current_user
+from app.core.auth import get_current_admin, get_current_user, get_current_airflow
 from app.models.user import User
 from app.models.staff import Staff
 
@@ -41,6 +41,16 @@ def get_my_staff_profile(
 
     return staff
 
+@router.get("/{staff_id}", response_model=StaffRead)
+def get_staff_by_id(
+    staff_id: int,
+    session: Session = Depends(get_session),
+    current_airflow: User = Depends(get_current_airflow)
+):
+    staff = session.get(Staff, staff_id)
+    if not staff:
+        raise HTTPException(status_code=404, detail="Staff not found")
+    return staff
 
 @router.put("/{id}", response_model=StaffRead)
 def update(

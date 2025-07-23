@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 from typing import List
 
 from app.db.session import get_session
-from app.core.auth import get_current_admin, get_current_user
+from app.core.auth import get_current_admin, get_current_user, get_current_airflow
 from app.services.airflow import trigger_appointment_dag, trigger_appointment_approval_dag
 from app.models.user import User
 from app.models.patient import Patient
@@ -65,12 +65,14 @@ def get_my_appointments(
 def get_appointment_details(
     appointment_id: int,
     session: Session = Depends(get_session),
+    current_airflow: User = Depends(get_current_airflow)
 ):
     appt = session.get(Appointment, appointment_id)
     if not appt:
         raise HTTPException(status_code=404, detail="Appointment not found")
 
     staff = session.get(Staff, appt.staff_id)
+    patient = session.get(Patient, appt.patient_id)
 
     return AppointmentForAirflow(
         id=appt.id,
@@ -78,6 +80,8 @@ def get_appointment_details(
         date=appt.date,
         status=appt.status,
         staff_name=f"{staff.first_name} {staff.last_name}",
+        patient_email=patient.email,
+        staff_email=staff.email,
         email_sent=appt.email_sent,
         reminder_sent=appt.reminder_sent
     )
@@ -125,7 +129,11 @@ def book_appointment(
     return new_appt
 
 @router.post("/{appointment_id}/mark-email")
-def mark_email_sent(appointment_id: int, session: Session = Depends(get_session)):
+def mark_email_sent(
+        appointment_id: int,
+        session: Session = Depends(get_session),
+        current_airflow: User = Depends(get_current_airflow)
+):
     appt = session.get(Appointment, appointment_id)
     if not appt:
         raise HTTPException(status_code=404, detail="Appointment not found")
@@ -135,7 +143,11 @@ def mark_email_sent(appointment_id: int, session: Session = Depends(get_session)
     return {"status": "ok"}
 
 @router.post("/{appointment_id}/mark-reminder")
-def mark_reminder_sent(appointment_id: int, session: Session = Depends(get_session)):
+def mark_reminder_sent(
+        appointment_id: int,
+        session: Session = Depends(get_session),
+        current_airflow: User = Depends(get_current_airflow)
+):
     appt = session.get(Appointment, appointment_id)
     if not appt:
         raise HTTPException(status_code=404, detail="Appointment not found")
@@ -212,7 +224,6 @@ def get_staff_appointments_with_names(
 def delete_appointment(
     appointment_id: int,
     session: Session = Depends(get_session),
-    current_admin: User = Depends(get_current_admin)
 ):
     appt = session.get(Appointment, appointment_id)
     if not appt:

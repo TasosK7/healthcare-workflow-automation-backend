@@ -9,12 +9,13 @@ from app.services.airflow import trigger_test_upload_dag, trigger_test_diagnosis
 
 
 from app.db.session import get_session
-from app.core.auth import get_current_admin,get_current_admin_or_lab_tech, get_current_user
+from app.core.auth import get_current_admin,get_current_admin_or_lab_tech, get_current_user, get_current_airflow
 from app.models.user import User
 from app.models.lab_test import LabTest
 from app.models.patient import Patient
 from app.models.staff import Staff
-from app.schemas.lab_test import LabTestCreate, LabTestRead, LabTestUpdate, LabTestWithPatientName, LabTestWithStaffName
+from app.schemas.lab_test import LabTestCreate, LabTestRead, LabTestUpdate, LabTestWithPatientName, \
+    LabTestWithStaffName, LabTestForAirflow
 from app.crud.lab_test import create_lab_test, get_lab_tests
 
 router = APIRouter()
@@ -65,6 +66,7 @@ def get_lab_tests_for_staff(
 @router.post("/upload", response_model=LabTestRead)
 async def upload_lab_test(
     file: UploadFile = File(...),
+    staff_id: str = Form(...),
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
@@ -92,6 +94,7 @@ async def upload_lab_test(
 
     lab_test = LabTest(
         patient_id=patient.id,
+        staff_id=int(staff_id),
         result_file_url=file_url,
         status="submitted"
     )
@@ -126,7 +129,7 @@ def add_diagnosis_to_lab_test(
 
     test.diagnosis = update.diagnosis
     test.status = "diagnosed"
-    test.requested_by = staff.id
+    test.staff_id = staff.id
 
     session.add(test)
     session.commit()
@@ -191,7 +194,7 @@ def get_diagnosed_lab_tests_for_patient(
 
     enriched = []
     for test in tests:
-        staff = session.get(Staff, test.requested_by) if test.requested_by else None
+        staff = session.get(Staff, test.staff_id)
         enriched.append(LabTestWithStaffName(
             id=test.id,
             diagnosis=test.diagnosis,
@@ -201,10 +204,11 @@ def get_diagnosed_lab_tests_for_patient(
 
     return enriched
 
-@router.get("/{lab_test_id}", response_model=LabTestWithPatientName)
+@router.get("/{lab_test_id}", response_model=LabTestForAirflow)
 def get_lab_test_by_id_with_patient(
     lab_test_id: int,
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_airflow: User = Depends(get_current_airflow)
 ):
     test = session.get(LabTest, lab_test_id)
     if not test:
@@ -214,13 +218,19 @@ def get_lab_test_by_id_with_patient(
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
 
-    return LabTestWithPatientName(
+    staff = session.get(Staff, test.staff_id)
+    if not staff:
+        raise HTTPException(status_code=404, detail="Staff member not found")
+
+    return LabTestForAirflow(
         id=test.id,
         patient_id=test.patient_id,
         result_file_url=test.result_file_url,
         status=test.status,
         diagnosis=test.diagnosis,
-        patient_name=f"{patient.first_name} {patient.last_name}"
+        patient_name=f"{patient.first_name} {patient.last_name}",
+        patient_email=patient.email,
+        staff_email=staff.email
     )
 
 @router.delete("/{lab_test_id}", status_code=204)

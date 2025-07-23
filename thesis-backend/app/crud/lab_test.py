@@ -12,8 +12,8 @@ def create_lab_test(lab_in: LabTestCreate, session: Session) -> LabTest:
     if not session.get(Patient, lab_in.patient_id):
         raise HTTPException(status_code=404, detail="Patient not found")
 
-    if not session.get(Staff, lab_in.requested_by):
-        raise HTTPException(status_code=404, detail="Requesting staff not found")
+    if not session.get(Staff, lab_in.staff_id):
+        raise HTTPException(status_code=404, detail="Assigned staff not found")
 
     department = session.get(Department, lab_in.lab_id)
     if not department:

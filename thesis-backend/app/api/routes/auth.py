@@ -17,6 +17,7 @@ def login(
 ):
     user = session.exec(select(User).where(User.username == form_data.username)).first()
 
+
     if not user or not verify_password(form_data.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -24,9 +25,14 @@ def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    if user.role == "airflow":
+        access_token_expires = timedelta(days=365)
+    else:
+        access_token_expires = timedelta(minutes=30)
+
     access_token = create_access_token(
         data={"sub": user.username},
-        expires_delta=timedelta(minutes=30)
+        expires_delta=access_token_expires
 
     )
     return {

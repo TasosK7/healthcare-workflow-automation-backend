@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from datetime import date
 
 class AppointmentBase(BaseModel):
@@ -38,6 +38,8 @@ class AppointmentWithPatientName(BaseModel):
 
 
 class AppointmentForAirflow(AppointmentWithStaffName):
+    patient_email: EmailStr
+    staff_email: EmailStr
     email_sent: bool
     reminder_sent: bool
 

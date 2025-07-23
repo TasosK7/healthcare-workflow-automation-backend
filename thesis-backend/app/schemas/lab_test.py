@@ -1,9 +1,9 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import Optional
 
 class LabTestBase(BaseModel):
     patient_id: int
-    requested_by: Optional[int] = None
+    staff_id: int
     lab_id: Optional[int] = None
     result_file_url: Optional[str] = None
     status: str
@@ -28,6 +28,19 @@ class LabTestWithPatientName(BaseModel):
     status: str
     diagnosis: Optional[str] = None
     patient_name: str
+
+    class Config:
+        orm_mode = True
+
+class LabTestForAirflow(BaseModel):
+    id: int
+    patient_id: int
+    result_file_url: Optional[str]
+    status: str
+    diagnosis: Optional[str]
+    patient_name: str
+    patient_email: EmailStr
+    staff_email: EmailStr
 
     class Config:
         orm_mode = True

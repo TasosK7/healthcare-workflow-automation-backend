@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 from typing import List
 
 from app.db.session import get_session
-from app.core.auth import get_current_admin, get_current_patient
+from app.core.auth import get_current_admin, get_current_patient, get_current_airflow
 from app.models.user import User
 from app.models.patient import Patient
 from app.schemas.patient import PatientCreate, PatientRead, PatientUpdate
@@ -29,6 +29,18 @@ def list_patients(
 @router.get("/me", response_model=PatientRead)
 def read_current_patient(current_patient: Patient = Depends(get_current_patient)):
     return current_patient
+
+@router.get("/{patient_id}", response_model=PatientRead)
+def get_patient_by_id(
+    patient_id: int,
+    session: Session = Depends(get_session),
+    current_airflow: User = Depends(get_current_airflow)
+):
+    patient = session.get(Patient, patient_id)
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    return patient
+
 
 @router.put("/{id}", response_model=PatientRead)
 def update(

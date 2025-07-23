@@ -97,4 +97,13 @@ def get_current_admin_or_lab_tech(
         detail="Only admins and lab technicians can view lab tests"
     )
 
+def get_current_airflow(current_user: User = Depends(get_current_user)) -> User:
+    if current_user.role != "airflow":
+        raise HTTPException(
+            status_code=403,
+            detail="Airflow-only access"
+        )
+    return current_user
+
+
 
