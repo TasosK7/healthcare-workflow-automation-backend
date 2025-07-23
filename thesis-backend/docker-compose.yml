@@ -14,6 +14,8 @@ services:
     command: server /data --console-address ":9001"
     volumes:
       - minio-data:/data
+    networks:
+      - thesis-net
   db:
     image: postgres:14
     restart: always
@@ -25,6 +27,8 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - thesis-net
   backend:
     build:
       context: https://github.com/TasosK7/healthcare-workflow-automation-backend.git#main:thesis-backend
@@ -38,8 +42,11 @@ services:
       - MINIO_ACCESS_KEY=minioadmin
       - MINIO_SECRET_KEY=minioadmin
       - MINIO_BUCKET=lab-tests
+      - AIRFLOW_API_BASE=http://healthcare-workflow-automation-airflow-airflow-webserver-1:8080/api/v1/dags
     depends_on:
       - db
+    networks:
+      - thesis-net
   frontend:
     build:
       context: https://github.com/TasosK7/healthcare-workflow-automation-react.git#main
@@ -49,6 +56,12 @@ services:
       - "5173:5173"
     depends_on:
       - backend
+    networks:
+      - thesis-net
 volumes:
   postgres_data:
   minio-data:
+
+networks:
+  thesis-net:
+    external: true
