@@ -5,7 +5,7 @@ from datetime import timedelta
 BUCKET_NAME = os.getenv("MINIO_BUCKET", "lab-tests")
 
 minio_client = Minio(
-    endpoint="minio-proxy:9000",
+    endpoint=os.getenv("MINIO_ENDPOINT", "localhost:9000"),
     access_key=os.getenv("MINIO_ACCESS_KEY", "minioadmin"),
     secret_key=os.getenv("MINIO_SECRET_KEY", "minioadmin"),
     secure=False,
@@ -23,4 +23,3 @@ def generate_presigned_url(object_name: str, expires_in_seconds: int = 300) -> s
         expires=timedelta(seconds=expires_in_seconds)
     )
 
-    # return url.replace("http://minio:9000", "http://localhost:9000")
