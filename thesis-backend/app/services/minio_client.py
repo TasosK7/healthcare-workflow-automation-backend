@@ -17,8 +17,10 @@ if not minio_client.bucket_exists(BUCKET_NAME):
     minio_client.make_bucket(BUCKET_NAME)
 
 def generate_presigned_url(object_name: str, expires_in_seconds: int = 300) -> str:
-    return minio_client.presigned_get_object(
+    url = minio_client.presigned_get_object(
         bucket_name=BUCKET_NAME,
         object_name=object_name,
         expires=timedelta(seconds=expires_in_seconds)
     )
+
+    return url.replace("http://minio:9000", "http://localhost:9000")
