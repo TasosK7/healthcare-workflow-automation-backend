@@ -5,7 +5,7 @@ from datetime import timedelta
 BUCKET_NAME = os.getenv("MINIO_BUCKET", "lab-tests")
 
 minio_client = Minio(
-    endpoint="172.19.0.3:9000",
+    endpoint=os.getenv("MINIO_ENDPOINT", "localhost:9000"),
     access_key=os.getenv("MINIO_ACCESS_KEY", "minioadmin"),
     secret_key=os.getenv("MINIO_SECRET_KEY", "minioadmin"),
     secure=False,
