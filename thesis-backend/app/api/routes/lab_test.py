@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from sqlmodel import Session, select
-from app.services.minio_client import minio_client, BUCKET_NAME, ENDPOINT_URL
+from app.services.minio_client import minio_client, BUCKET_NAME
 import os
 import uuid
 from typing import List
@@ -90,7 +90,7 @@ async def upload_lab_test(
         content_type=file.content_type
     )
 
-    file_url = f"http://{ENDPOINT_URL}/{BUCKET_NAME}/{object_name}"
+    file_url = f"http://localhost:9000/{BUCKET_NAME}/{object_name}"
 
     lab_test = LabTest(
         patient_id=patient.id,
