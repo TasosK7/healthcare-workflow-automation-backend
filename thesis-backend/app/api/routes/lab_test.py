@@ -36,7 +36,7 @@ def list_lab_tests(
     return get_lab_tests(session)
 
 
-from app.services.minio_client import minio_client, BUCKET_NAME, ENDPOINT_URL
+from app.services.minio_client import minio_client, BUCKET_NAME
 import uuid
 
 @router.get("/staff/me", response_model=List[LabTestWithPatientName])
